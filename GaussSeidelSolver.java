@@ -23,8 +23,8 @@ public class GaussSeidelSolver {
         double epsilon = 0.0;
 
         if (choice == 1) {
-            // Считываем с клавиатуры
             System.out.println("Введите размерность системы (n <= 20):");
+
             n = consoleScanner.nextInt();
 
             A = new double[n][n];
@@ -33,19 +33,21 @@ public class GaussSeidelSolver {
             System.out.println("Введите коэффициенты матрицы A построчно:");
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
-                    A[i][j] = consoleScanner.nextDouble();
+                    String token = consoleScanner.next();
+                    A[i][j] = pars_double(token);
                 }
             }
             System.out.println("Введите вектор свободных членов b:");
             for (int i = 0; i < n; i++) {
-                b[i] = consoleScanner.nextDouble();
+                String token = consoleScanner.next();
+                b[i] = pars_double(token);
             }
 
             System.out.println("Введите требуемую точность epsilon:");
-            epsilon = consoleScanner.nextDouble();
+            String token = consoleScanner.next();
+            epsilon = pars_double(token);
 
         } else if (choice == 2) {
-            // Считываем из файла
             System.out.println("Введите путь к файлу с данными:");
             String filePath = consoleScanner.next();
 
@@ -57,20 +59,23 @@ public class GaussSeidelSolver {
 
                 for (int i = 0; i < n; i++) {
                     for (int j = 0; j < n; j++) {
-                        A[i][j] = fileScanner.nextDouble();
+                        String token = consoleScanner.next();
+                        A[i][j] = pars_double(token);
+
                     }
                 }
                 for (int i = 0; i < n; i++) {
-                    b[i] = fileScanner.nextDouble();
+                    String token = consoleScanner.next();
+                    b[i] = pars_double(token);
                 }
-                epsilon = fileScanner.nextDouble();
+                String token = consoleScanner.next();
+                epsilon = pars_double(token);
 
             } catch (FileNotFoundException e) {
                 System.out.println("Файл не найден: " + e.getMessage());
                 return;
             }
         } else if (choice == 3) {
-            // Генерация случайной матрицы
             System.out.println("Введите размерность системы (n <= 20):");
             n = consoleScanner.nextInt();
             A = new double[n][n];
@@ -78,21 +83,18 @@ public class GaussSeidelSolver {
 
             Random rand = new Random();
 
-            // Генерируем матрицу A таким образом, чтобы она была диагонально преобладающей
+            // Генерю матрицу A таким образом, чтобы она была диагонально преобладающей
             for (int i = 0; i < n; i++) {
                 double sumOffDiag = 0.0;
                 for (int j = 0; j < n; j++) {
                     if (i != j) {
-                        // Генерируем случайное число от 0 до 10 для вне диагональных элементов
                         A[i][j] = rand.nextDouble() * 10;
                         sumOffDiag += Math.abs(A[i][j]);
                     }
                 }
-                // Диагональный элемент выбираем больше суммы модулей остальных элементов строки
                 A[i][i] = sumOffDiag + rand.nextDouble() * 10 + 1;
             }
 
-            // Генерируем случайный вектор свободных членов b (например, значения от 0 до 100)
             for (int i = 0; i < n; i++) {
                 b[i] = rand.nextDouble() * 100;
             }
@@ -111,19 +113,16 @@ public class GaussSeidelSolver {
             return;
         }
 
-        // 1) Попытка достичь диагонального преобладания
         boolean canReorder = reorderForDiagonalDominance(A, b);
         if (!canReorder) {
             System.out.println("Невозможно достичь диагонального преобладания для данной матрицы.");
             return;
         }
 
-        // 2) Вычисляем (например) норму матрицы A (максимальная построчная сумма модулей)
         double matrixNorm = calculateMatrixNorm(A);
         System.out.printf("Норма матрицы (максимальная сумма по строкам): %.6f%n", matrixNorm);
 
-        // 3) Запускаем метод Гаусса–Зейделя
-        GaussSeidelResult result = gaussSeidel(A, b, epsilon, 1000 /*макс число итераций*/);
+        GaussSeidelResult result = gaussSeidel(A, b, epsilon, 1000);
 
         if (!result.isConverged) {
             System.out.println("Метод Гаусса–Зейделя не сошёлся за заданное число итераций.");
@@ -138,11 +137,11 @@ public class GaussSeidelSolver {
 
     /**
      * Метод Гаусса–Зейделя.
-     * @param A Матрица системы
-     * @param b Вектор правых частей
-     * @param epsilon Заданная точность
-     * @param maxIterations Максимальное число итераций
-     * @return Результат выполнения (решение, вектор ошибок, число итераций, признак сходимости)
+     * Матрица системы
+     * b Вектор правых частей
+     * epsilon Заданная точность
+     * maxIterations Максимальное число итераций
+     * Результат выполнения (решение, вектор ошибок, число итераций, признак сходимости)
      */
     public static GaussSeidelResult gaussSeidel(double[][] A, double[] b, double epsilon, int maxIterations) {
         int n = A.length;
@@ -154,10 +153,8 @@ public class GaussSeidelSolver {
         int iteration = 0;
 
         while (iteration < maxIterations) {
-            // Копируем x в oldX
             System.arraycopy(x, 0, oldX, 0, n);
 
-            // Один проход по формуле Гаусса–Зейделя
             for (int i = 0; i < n; i++) {
                 double sigma = 0.0;
                 for (int j = 0; j < n; j++) {
@@ -168,7 +165,6 @@ public class GaussSeidelSolver {
                 x[i] = (b[i] - sigma) / A[i][i];
             }
 
-            // Считаем текущие ошибки
             double maxDiff = 0.0;
             for (int i = 0; i < n; i++) {
                 errors[i] = Math.abs(x[i] - oldX[i]);
@@ -188,7 +184,7 @@ public class GaussSeidelSolver {
     }
 
     /**
-     * Пытаеемся переставлять строки матрицы A (и соответствующие элементы b),
+     * Пробую переставлять строки матрицы A (и соответствующие элементы b),
      * чтобы выполнить условие диагонального преобладания.
      * Возвращает true, если удалось достичь диагонального преобладания.
      */
@@ -245,10 +241,15 @@ public class GaussSeidelSolver {
         }
         return maxRowSum;
     }
+    public static double pars_double(String input) {
+        input = input.trim();
 
-    /**
-     * Вспомогательный класс для возврата результата из метода Гаусса–Зейделя.
-     */
+        if (input.contains(",")) {
+            input = input.replace(',', '.');
+        }
+        return Double.parseDouble(input);
+    }
+
     static class GaussSeidelResult {
         double[] x;
         double[] errors;
